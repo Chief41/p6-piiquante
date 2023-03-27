@@ -5,20 +5,35 @@ const User = require('../models/User');
 
 
 exports.signup = (req, res, next) => {
-    console.log(req.body.password)
-    console.log(req.body.email)
-    bcrypt.hash(req.body.password, 10)
-    .then(hash => {
-        const user = new User({
-            email: req.body.email,
-            password: hash
-        });
-        user.save()
-        .then(()=> res.status(201).json({ message: 'Utilisateur créé !'}))
-        .catch(error => { console.log(error);res.status(400).json({ error })});
-    })
-    .catch(error => res.status(500).json({ error }));
-};
+    //d'abord, on cherche un potentiel utilisateur déjà inscrit avec le même email
+    const oldUser = User.findOne({ email: req.body.email })
+      .then((oldUser) => {
+        if (oldUser) {
+          //un utilisateur inscrit avec le même email existe
+          //-> on retourne une réponse sans aller plus loin
+          return res.status(409).json({ message: 'There was an error' });
+        } else {
+          //pas d'utilisateur déjà inscrit avec le même email
+          //-> on peut inscrire le nouvel utilisateur
+          bcrypt
+            .hash(req.body.password, 10)
+            .then((hash) => {
+              const newUser = new User({
+                email: req.body.email,
+                password: hash,
+              });
+              newUser
+                .save()
+                .then(() => {
+                  res.status(201).json({ message: 'utilisateur créé' });
+                })
+                .catch((error) => res.status(400).json({ error }));
+            })
+            .catch((error) => res.status(500).json({ error }));
+        }
+      })
+      .catch((error) => res.status(500).json({ error }));
+  };
 
 exports.login = (req, res, next) => {
    User.findOne({ email: req.body.email })
