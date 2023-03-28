@@ -1,6 +1,8 @@
 const express = require('express');
-
 const mongoose = require('mongoose');
+const helmet = require('helmet');
+const dotEnv = require('dotenv');
+dotEnv.config();
 
 
 const saucesRoutes = require('./routes/sauces');
@@ -9,14 +11,17 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 
+app.use(helmet());
+
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
+  res.setHeader("Cross-Origin-Resource-Policy", "same-site");
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   next();
 });
 
-mongoose.connect('mongodb+srv://serdarolmez0:29031992Se@cluster0.vt9htkb.mongodb.net/piquante?retryWrites=true&w=majority',
+mongoose.connect(process.env.CONNECT_MONGOOSE,
   { useNewUrlParser: true,
     useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
